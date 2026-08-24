@@ -23,6 +23,12 @@ on:
 permissions:
   contents: write
 
+# A futás sorszáma egyben a versionCode és az a szám, amivel a telepített app
+# összeveti magát a közzétett verzióval. Az EXPO_PUBLIC_ előtag miatt az Expo
+# beépíti a JS bundle-be.
+env:
+  EXPO_PUBLIC_BUILD_NUMBER: ${{ github.run_number }}
+
 # Egyszerre csak egy build fusson; az újabb push megszakítja a régit.
 concurrency:
   group: apk-${{ github.ref }}
@@ -86,11 +92,26 @@ jobs:
       - name: APK elnevezése
         run: cp android/app/build/outputs/apk/release/app-release.apk napirend.apk
 
+      # Ezt tölti le a telepített app, hogy eldöntse, kell-e frissítenie.
+      - name: Verzióleíró készítése
+        run: |
+          cat > version.json <<JSON
+          {
+            "build": ${{ github.run_number }},
+            "version": "1.0.${{ github.run_number }}",
+            "apkUrl": "https://github.com/${{ github.repository }}/releases/download/apk/napirend.apk",
+            "notes": "$(git log -1 --pretty=%s | sed 's/"/\\"/g')"
+          }
+          JSON
+          cat version.json
+
       - name: Feltöltés build-melléklerként
         uses: actions/upload-artifact@v4
         with:
           name: napirend-apk
-          path: napirend.apk
+          path: |
+            napirend.apk
+            version.json
           retention-days: 30
 
       # Fix `apk` tag, hogy a letöltési link mindig ugyanaz maradjon.
@@ -99,7 +120,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release delete apk --yes --cleanup-tag 2>/dev/null || true
-          gh release create apk napirend.apk \
+          gh release create apk napirend.apk version.json \
             --title "Napirend – legfrissebb APK" \
             --notes "Telepíthető Android alkalmazás.
 

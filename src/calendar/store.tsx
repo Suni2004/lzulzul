@@ -30,6 +30,21 @@ export type PermissionState = 'unknown' | 'granted' | 'denied';
 /** A multi-day event is indexed on every day it touches, up to this many. */
 const MAX_SPAN_DAYS = 90;
 
+/** Compares the fields the UI actually renders, ignoring object identity. */
+function sameCalendars(a: CalendarInfo[], b: CalendarInfo[]): boolean {
+  if (a.length !== b.length) return false;
+  return a.every((cal, i) => {
+    const other = b[i];
+    return (
+      cal.id === other.id &&
+      cal.title === other.title &&
+      cal.color === other.color &&
+      cal.writable === other.writable &&
+      cal.isPrimary === other.isPrimary
+    );
+  });
+}
+
 type Range = { from: Date; to: Date };
 
 function initialRange(): Range {
@@ -62,7 +77,7 @@ type CalendarContextValue = {
 const CalendarContext = createContext<CalendarContextValue | null>(null);
 
 export function CalendarProvider({ children }: { children: React.ReactNode }) {
-  const { settings, loading: settingsLoading } = useSettings();
+  const { settings, loading: settingsLoading, update: updateSettings } = useSettings();
 
   const [permission, setPermission] = useState<PermissionState>('unknown');
   const [calendars, setCalendars] = useState<CalendarInfo[]>([]);
@@ -89,7 +104,9 @@ export function CalendarProvider({ children }: { children: React.ReactNode }) {
       }
 
       const cals = await api.listCalendars();
-      setCalendars(cals);
+      // Replacing the array on every poll would hand every consumer a new
+      // identity for unchanged data, re-running their effects for nothing.
+      setCalendars((prev) => (sameCalendars(prev, cals) ? prev : cals));
 
       const { from, to } = rangeRef.current;
       const events = await api.listEvents(cals.map((c) => c.id), from, to);
@@ -178,9 +195,20 @@ export function CalendarProvider({ children }: { children: React.ReactNode }) {
     async (draft: EventDraft, existingId?: string) => {
       if (existingId) await api.updateEvent(existingId, draft);
       else await api.createEvent(draft);
+
+      // An event saved into a hidden calendar would be filtered straight back
+      // out of the UI — which reads exactly like the save having failed.
+      if (settings.hiddenCalendarIds.includes(draft.calendarId)) {
+        updateSettings({
+          hiddenCalendarIds: settings.hiddenCalendarIds.filter(
+            (id) => id !== draft.calendarId,
+          ),
+        });
+      }
+
       await load('refresh');
     },
-    [load],
+    [load, settings.hiddenCalendarIds, updateSettings],
   );
 
   const removeEvent = useCallback(

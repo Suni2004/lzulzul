@@ -8,9 +8,11 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { CalendarProvider } from '../src/calendar/store';
+import { UpdateGate } from '../src/components/UpdateGate';
 import { configureHandler } from '../src/notifications';
 import { SettingsProvider, useSettings } from '../src/settings/store';
 import { ThemeProvider, useTheme } from '../src/theme';
+import { UpdateProvider } from '../src/update/store';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -48,19 +50,21 @@ function Shell() {
   return (
     <>
       <StatusBar style={t.isDark ? 'light' : 'dark'} />
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          contentStyle: { backgroundColor: t.c.bg },
-          animation: 'slide_from_right',
-        }}>
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="event/[id]" />
-        <Stack.Screen
-          name="event/edit"
-          options={{ presentation: 'modal', animation: 'slide_from_bottom' }}
-        />
-      </Stack>
+      <UpdateGate>
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            contentStyle: { backgroundColor: t.c.bg },
+            animation: 'slide_from_right',
+          }}>
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="event/[id]" />
+          <Stack.Screen
+            name="event/edit"
+            options={{ presentation: 'modal', animation: 'slide_from_bottom' }}
+          />
+        </Stack>
+      </UpdateGate>
     </>
   );
 }
@@ -71,9 +75,11 @@ export default function RootLayout() {
       <SafeAreaProvider>
         <SettingsProvider>
           <ThemeProvider>
-            <CalendarProvider>
-              <Shell />
-            </CalendarProvider>
+            <UpdateProvider>
+              <CalendarProvider>
+                <Shell />
+              </CalendarProvider>
+            </UpdateProvider>
           </ThemeProvider>
         </SettingsProvider>
       </SafeAreaProvider>

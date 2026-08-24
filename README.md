@@ -81,6 +81,23 @@ A fordítás kb. 15–25 perc, utána a fenti link már az új változatot adja.
 > tökéletes, és az újabb verziók telepíthetők a régi fölé; a Play Áruházba
 > feltölteni viszont saját kulcs kellene hozzá.
 
+### Kötelező frissítés
+
+Minden build közzétesz egy `version.json`-t az APK mellé, benne a futás
+sorszámával. A telepített app indításkor és előtérbe kerüléskor összeveti ezt
+a sajátjával, és ha újabb van, **blokkoló képernyőt** mutat egy letöltés
+gombbal – addig nem lehet használni.
+
+A mechanizmus szándékosan hibatűrő: hálózati hiba, lejárt kérés vagy hiányos
+verzióleíró esetén **nem** blokkol. Nem lehet valakit kizárni a saját
+naptárából azért, mert épp nincs térerő.
+
+A futó build számát az app a natív app configból olvassa
+(`Constants.expoConfig.extra.buildNumber`), nem a JS bundle-be inlinelt
+környezeti változóból – utóbbit a Metro transform-cache be tudja égetni egy
+korábbi buildből, és akkor az ellenőrzés némán rossz számmal dolgozna.
+Helyi fejlesztésnél a szám 0, ilyenkor az ellenőrzés ki van kapcsolva.
+
 ### A másik út: saját build az EAS-szel
 
 Ha inkább te fordítanád (például mert módosítottad a kódot):

@@ -1,6 +1,6 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { router, useLocalSearchParams } from 'expo-router';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -36,20 +36,29 @@ export default function EventEditScreen() {
 
   const editing = Boolean(id);
   const writable = useMemo(() => calendars.filter((c) => c.writable), [calendars]);
+  const hidden = settings.hiddenCalendarIds;
+  const visibleWritable = useMemo(
+    () => writable.filter((c) => !hidden.includes(c.id)),
+    [writable, hidden],
+  );
 
   const [loading, setLoading] = useState(editing);
   const [saving, setSaving] = useState(false);
   const [draft, setDraft] = useState<EventDraft | null>(null);
 
-  // Seed the form: either from the event being edited, or from sensible
-  // defaults anchored to the day the user tapped "+" on.
+  // The form is seeded exactly once. This guard matters: the calendar store
+  // hands back a fresh array on every reload, and Android fires an app-state
+  // change whenever a native date picker opens — without it, re-seeding would
+  // wipe whatever the user had already typed.
+  const seeded = useRef(false);
+
   useEffect(() => {
-    let cancelled = false;
+    if (seeded.current) return;
+    seeded.current = true;
 
     if (editing && id) {
       getEvent(id)
         .then((event) => {
-          if (cancelled) return;
           if (event) {
             setDraft({
               title: event.title,
@@ -62,21 +71,15 @@ export default function EventEditScreen() {
             });
           }
         })
-        .finally(() => {
-          if (!cancelled) setLoading(false);
-        });
-      return () => {
-        cancelled = true;
-      };
+        .finally(() => setLoading(false));
+      return;
     }
 
     const anchor = date ? new Date(date) : new Date();
     const start = withDate(nextHalfHour(), anchor);
-    const preferred =
-      writable.find((c) => c.id === settings.defaultCalendarId) ??
-      writable.find((c) => c.isPrimary) ??
-      writable[0];
 
+    // The target calendar is filled in by the effect below, once the list
+    // has actually loaded.
     setDraft({
       title: '',
       notes: '',
@@ -84,12 +87,30 @@ export default function EventEditScreen() {
       start,
       end: addMinutes(start, DEFAULT_DURATION_MINUTES),
       allDay: false,
-      calendarId: preferred?.id ?? '',
+      calendarId: '',
     });
-    return () => {
-      cancelled = true;
-    };
-  }, [editing, id, date, writable, settings.defaultCalendarId]);
+  }, [editing, id, date]);
+
+  // Choose a target calendar as soon as the list is available, but never
+  // overwrite a choice the user has already made.
+  useEffect(() => {
+    if (editing) return;
+
+    setDraft((prev) => {
+      if (!prev || prev.calendarId) return prev;
+
+      // Prefer a calendar that is actually visible — saving into a hidden one
+      // would create the event but leave it invisible in the app, which is
+      // indistinguishable from the save having failed.
+      const candidates = visibleWritable.length > 0 ? visibleWritable : writable;
+      const preferred =
+        candidates.find((c) => c.id === settings.defaultCalendarId) ??
+        candidates.find((c) => c.isPrimary) ??
+        candidates[0];
+
+      return preferred ? { ...prev, calendarId: preferred.id } : prev;
+    });
+  }, [editing, writable, visibleWritable, settings.defaultCalendarId]);
 
   const patch = (changes: Partial<EventDraft>) =>
     setDraft((prev) => (prev ? { ...prev, ...changes } : prev));
