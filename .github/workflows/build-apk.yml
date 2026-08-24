@@ -45,11 +45,23 @@ jobs:
           cache: npm
 
       - name: JDK beállítása
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: 17
-          cache: gradle
+
+      # A setup-java beépített gradle-cache-e itt nem használható: a checkout
+      # után még nincs egyetlen gradle fájl sem, azokat a prebuild generálja.
+      # Ezért saját cache, fix kulccsal.
+      - name: Gradle cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('package-lock.json', '.github/workflows/build-apk.yml') }}
+          restore-keys: |
+            gradle-${{ runner.os }}-
 
       - name: Függőségek telepítése
         run: npm ci
