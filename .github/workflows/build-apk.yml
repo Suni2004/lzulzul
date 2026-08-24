@@ -1,0 +1,97 @@
+# Megépíti a telepíthető Android APK-t, és közzéteszi az `apk` nevű
+# release-ben, ahonnan a telefonról egy koppintással letölthető.
+#
+# Indul: minden pusholásnál erre az ágra, illetve kézzel az Actions fülön.
+
+name: APK építése
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - claude/mobile-app-ddxynw
+    paths:
+      - 'app/**'
+      - 'src/**'
+      - 'assets/**'
+      - 'app.json'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/build-apk.yml'
+
+# A release közzétételéhez írási jog kell a repóhoz.
+permissions:
+  contents: write
+
+# Egyszerre csak egy build fusson; az újabb push megszakítja a régit.
+concurrency:
+  group: apk-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Release APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Kód letöltése
+        uses: actions/checkout@v4
+
+      - name: Node beállítása
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: JDK beállítása
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: gradle
+
+      - name: Függőségek telepítése
+        run: npm ci
+
+      # Minőségi kapu: hibás kódból ne szülessen APK.
+      - name: TypeScript ellenőrzés
+        run: npx tsc --noEmit
+
+      - name: Tesztek
+        run: npm test
+
+      - name: Natív Android projekt generálása
+        run: npx expo prebuild --platform android --no-install
+
+      # Csak a valódi telefonokon használt ABI-k kellenek; az emulátoros
+      # x86 változatok kihagyása feleannyi build idő és jóval kisebb APK.
+      - name: APK fordítása
+        working-directory: android
+        run: ./gradlew assembleRelease --no-daemon -PreactNativeArchitectures=arm64-v8a,armeabi-v7a
+
+      - name: APK elnevezése
+        run: cp android/app/build/outputs/apk/release/app-release.apk napirend.apk
+
+      - name: Feltöltés build-melléklerként
+        uses: actions/upload-artifact@v4
+        with:
+          name: napirend-apk
+          path: napirend.apk
+          retention-days: 30
+
+      # Fix `apk` tag, hogy a letöltési link mindig ugyanaz maradjon.
+      - name: Közzététel release-ként
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete apk --yes --cleanup-tag 2>/dev/null || true
+          gh release create apk napirend.apk \
+            --title "Napirend – legfrissebb APK" \
+            --notes "Telepíthető Android alkalmazás.
+
+          **Telepítés:** töltsd le a lenti \`napirend.apk\` fájlt a telefonodra, és nyisd meg. Az Android rá fog kérdezni, hogy engedélyezed-e az ismeretlen forrásból való telepítést — ez normális sideloadingnál.
+
+          Az app első indításkor naptár- és értesítési engedélyt kér; mindkettő kell a működéséhez.
+
+          Készült a \`${GITHUB_SHA:0:7}\` commitból."

@@ -60,15 +60,38 @@ a kiszámolt terv megegyezik azzal, ami már be van állítva, nem nyúlunk hozz
 ## Telepítés a telefonra
 
 Az app **natív modulokat használ** (naptár-hozzáférés, ütemezett értesítések),
-ezért Expo Go-ban nem fut. Kell egy saját build – ez ingyenes.
+ezért Expo Go-ban nem fut – kell egy lefordított APK.
 
-### 1. Függőségek
+### A legegyszerűbb út: kész APK letöltése
+
+Minden pusholásnál automatikusan lefordul egy telepíthető APK, és felkerül a
+Releases közé. A telefonodról nyisd meg ezt a linket, és koppints a
+`napirend.apk` fájlra:
+
+**<https://github.com/Suni2004/lzulzul/releases/download/apk/napirend.apk>**
+
+Az Android rá fog kérdezni, hogy engedélyezed-e az ismeretlen forrásból való
+telepítést – sideloadingnál ez normális. Ehhez a módszerhez semmit nem kell
+telepítened a gépedre.
+
+A buildet kézzel is elindíthatod: **Actions → APK építése → Run workflow**.
+A fordítás kb. 15–25 perc, utána a fenti link már az új változatot adja.
+
+> A build a szokásos Android debug-kulccsal írja alá az APK-t. Sideloadingra
+> tökéletes, és az újabb verziók telepíthetők a régi fölé; a Play Áruházba
+> feltölteni viszont saját kulcs kellene hozzá.
+
+### A másik út: saját build az EAS-szel
+
+Ha inkább te fordítanád (például mert módosítottad a kódot):
+
+#### 1. Függőségek
 
 ```bash
 npm install
 ```
 
-### 2. Belépés az Expo-fiókodba
+#### 2. Belépés az Expo-fiókodba
 
 ```bash
 npx eas login
@@ -76,7 +99,7 @@ npx eas login
 
 (Ha még nincs fiókod: <https://expo.dev/signup> – ingyenes.)
 
-### 3. APK készítése
+#### 3. APK készítése
 
 ```bash
 npx eas build --platform android --profile preview
@@ -87,7 +110,7 @@ QR-kódot – a telefonodról megnyitva letöltődik az APK, amit telepíthetsz.
 (Android rá fog kérdezni, hogy engedélyezed-e az ismeretlen forrásból való
 telepítést.)
 
-### 4. Első indítás
+#### 4. Első indítás
 
 Az app két engedélyt kér:
 
@@ -97,7 +120,7 @@ Az app két engedélyt kér:
 Utána a *Beállítások* fülön beállíthatod, mikor és hogyan szóljon. A
 *Teszt értesítés küldése* gombbal rögtön meg is hallgathatod, hogy fog kinézni.
 
-### Fejlesztés közben
+#### Fejlesztés közben
 
 ```bash
 npx eas build --platform android --profile development   # egyszer
