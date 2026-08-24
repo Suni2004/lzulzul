@@ -4,7 +4,7 @@
  * rather than a pile of screens.
  */
 
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import * as Haptics from 'expo-haptics';
 import React from 'react';
 import {

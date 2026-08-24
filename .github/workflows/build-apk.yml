@@ -76,11 +76,12 @@ jobs:
       - name: Natív Android projekt generálása
         run: npx expo prebuild --platform android --no-install
 
-      # Csak a valódi telefonokon használt ABI-k kellenek; az emulátoros
-      # x86 változatok kihagyása feleannyi build idő és jóval kisebb APK.
+      # Csak arm64-v8a: minden 2015 utáni Android telefon ilyen. A 32 bites
+      # armeabi-v7a és az emulátoros x86 változatok elhagyása ~14 MB-tal
+      # kisebb APK-t és rövidebb build időt jelent.
       - name: APK fordítása
         working-directory: android
-        run: ./gradlew assembleRelease --no-daemon -PreactNativeArchitectures=arm64-v8a,armeabi-v7a
+        run: ./gradlew assembleRelease --no-daemon -PreactNativeArchitectures=arm64-v8a
 
       - name: APK elnevezése
         run: cp android/app/build/outputs/apk/release/app-release.apk napirend.apk
