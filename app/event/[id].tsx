@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Linking, Platform, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { getEvent } from '../../src/calendar/api';
+import { readEvent } from '../../src/calendar/read';
 import { useCalendar } from '../../src/calendar/store';
 import type { CalEvent } from '../../src/calendar/types';
 import { Screen } from '../../src/components/Screen';
@@ -81,7 +81,7 @@ export default function EventDetailScreen() {
     let cancelled = false;
     if (!id) return;
     setLoading(true);
-    getEvent(id)
+    readEvent(id)
       .then((found) => {
         if (!cancelled) setEvent(found);
       })

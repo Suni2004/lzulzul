@@ -1,8 +1,9 @@
 # Napirend
 
-Naptár alkalmazás Androidra és iOS-re, ami a telefonod **meglévő naptáraiból**
-dolgozik (Google, Samsung, Exchange, iCloud – ami be van állítva a készüléken).
-Nem hoz létre külön adatbázist, és semmilyen adatot nem küld el sehova.
+Naptár alkalmazás Androidra és iOS-re. Megmutatja a telefonod **meglévő
+naptárait** (Google, Samsung, Exchange, iCloud), az **általad felvett
+események viszont csak az appban léteznek** – a Samsung és a Google naptár
+nem látja őket. Semmilyen adat nem hagyja el a készüléket.
 
 A hangsúly két dolgon van: **átlátható felület** és **értesítések, amik tényleg
 segítenek** – nem csak egyet szólnak öt perccel az esemény előtt.
@@ -24,6 +25,22 @@ segítenek** – nem csak egyet szólnak öt perccel az esemény előtt.
   célnaptár. A kezdés eltolásakor a vége magától követi, a hossz nem változik.
 - Világos és sötét téma, a rendszerbeállítást követve vagy kézzel átállítva.
 - Végig magyar: hónap- és napnevek, „Ma / Holnap / Tegnap", `2026. augusztus 24.`.
+
+### Hol tárolódnak az események
+
+| | Honnan jön | Módosítható | Látja más app |
+|---|---|---|---|
+| **Napirend** | az app saját tárolója | igen | **nem** |
+| Google / Samsung / stb. | a telefon naptárai | igen | igen |
+
+Amit az appban veszel fel, a **Napirend** saját naptárába kerül. Ez nem a
+telefon naptár-adatbázisa, hanem az app privát tárolója – ezért nem jelenik
+meg sehol máshol, és nem is szinkronizálódik semmilyen fiókba. Cserébe ezek az
+események az app eltávolításával elvesznek.
+
+A telefon meglévő naptárait az app továbbra is megjeleníti, és ha egy ottani
+eseményt szerkesztesz, az a saját naptárában módosul – ilyenkor a szerkesztő
+külön jelzi is, hogy a változás máshol is látszani fog.
 
 ### Értesítések
 

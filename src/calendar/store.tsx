@@ -21,14 +21,28 @@ import { AppState, type AppStateStatus } from 'react-native';
 import { syncNotifications } from '../notifications';
 import { useSettings } from '../settings/store';
 import { addDays, addMonths, dayKey, startOfDay, startOfWeek } from '../utils/date';
+import * as local from '../local/events';
 import * as api from './api';
 import { compareEvents } from './api';
-import type { CalEvent, CalendarInfo, EventDraft } from './types';
+import { LOCAL_CALENDAR_ID, type CalEvent, type CalendarInfo, type EventDraft } from './types';
 
 export type PermissionState = 'unknown' | 'granted' | 'denied';
 
 /** A multi-day event is indexed on every day it touches, up to this many. */
 const MAX_SPAN_DAYS = 90;
+
+/**
+ * The app's own calendar. It is not a real device calendar — events filed
+ * under it live in this app's storage and are invisible to every other
+ * calendar app on the phone.
+ */
+const LOCAL_CALENDAR: CalendarInfo = {
+  id: LOCAL_CALENDAR_ID,
+  title: 'Napirend',
+  color: local.LOCAL_COLOR,
+  writable: true,
+  isPrimary: true,
+};
 
 /** Compares the fields the UI actually renders, ignoring object identity. */
 function sameCalendars(a: CalendarInfo[], b: CalendarInfo[]): boolean {
@@ -103,14 +117,18 @@ export function CalendarProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      const cals = await api.listCalendars();
+      const deviceCals = await api.listCalendars();
+      const cals = [LOCAL_CALENDAR, ...deviceCals];
       // Replacing the array on every poll would hand every consumer a new
       // identity for unchanged data, re-running their effects for nothing.
       setCalendars((prev) => (sameCalendars(prev, cals) ? prev : cals));
 
       const { from, to } = rangeRef.current;
-      const events = await api.listEvents(cals.map((c) => c.id), from, to);
-      setAllEvents(events);
+      const [deviceEvents, localEvents] = await Promise.all([
+        api.listEvents(deviceCals.map((c) => c.id), from, to),
+        local.listLocalEvents(),
+      ]);
+      setAllEvents([...deviceEvents, ...localEvents]);
       setError(null);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Nem sikerült beolvasni a naptárat.');
@@ -193,8 +211,15 @@ export function CalendarProvider({ children }: { children: React.ReactNode }) {
 
   const saveEvent = useCallback(
     async (draft: EventDraft, existingId?: string) => {
-      if (existingId) await api.updateEvent(existingId, draft);
-      else await api.createEvent(draft);
+      // New events always go to the app's own store; only an event that
+      // already lives in a device calendar is written back to one.
+      if (existingId && !local.isLocalId(existingId)) {
+        await api.updateEvent(existingId, draft);
+      } else if (existingId) {
+        await local.updateLocalEvent(existingId, draft);
+      } else {
+        await local.createLocalEvent(draft);
+      }
 
       // An event saved into a hidden calendar would be filtered straight back
       // out of the UI — which reads exactly like the save having failed.
@@ -213,7 +238,8 @@ export function CalendarProvider({ children }: { children: React.ReactNode }) {
 
   const removeEvent = useCallback(
     async (id: string) => {
-      await api.deleteEvent(id);
+      if (local.isLocalId(id)) await local.deleteLocalEvent(id);
+      else await api.deleteEvent(id);
       await load('refresh');
     },
     [load],

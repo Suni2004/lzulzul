@@ -13,14 +13,14 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { getEvent } from '../../src/calendar/api';
+import { readEvent } from '../../src/calendar/read';
 import { useCalendar } from '../../src/calendar/store';
-import type { EventDraft } from '../../src/calendar/types';
+import { LOCAL_CALENDAR_ID, type EventDraft } from '../../src/calendar/types';
+import { isLocalId } from '../../src/local/events';
 import { DateTimeField } from '../../src/components/DateTimeField';
 import { Screen } from '../../src/components/Screen';
 import { Row, Section } from '../../src/components/Settings';
-import { Button, Chip, EmptyState, Touch, Txt } from '../../src/components/ui';
-import { useSettings } from '../../src/settings/store';
+import { Button, Chip, Touch, Txt } from '../../src/components/ui';
 import { useTheme } from '../../src/theme';
 import { addMinutes, formatDuration, nextHalfHour, withDate } from '../../src/utils/date';
 
@@ -32,14 +32,16 @@ export default function EventEditScreen() {
   const insets = useSafeAreaInsets();
   const { id, date } = useLocalSearchParams<{ id?: string; date?: string }>();
   const { calendars, saveEvent } = useCalendar();
-  const { settings } = useSettings();
 
   const editing = Boolean(id);
-  const writable = useMemo(() => calendars.filter((c) => c.writable), [calendars]);
-  const hidden = settings.hiddenCalendarIds;
-  const visibleWritable = useMemo(
-    () => writable.filter((c) => !hidden.includes(c.id)),
-    [writable, hidden],
+
+  /** True while editing an event that lives in one of the phone's calendars. */
+  const editingDeviceEvent = editing && id != null && !isLocalId(id);
+
+  /** Only offered when moving an existing device event between calendars. */
+  const deviceCalendars = useMemo(
+    () => calendars.filter((c) => c.writable && c.id !== LOCAL_CALENDAR_ID),
+    [calendars],
   );
 
   const [loading, setLoading] = useState(editing);
@@ -57,7 +59,7 @@ export default function EventEditScreen() {
     seeded.current = true;
 
     if (editing && id) {
-      getEvent(id)
+      readEvent(id)
         .then((event) => {
           if (event) {
             setDraft({
@@ -87,30 +89,9 @@ export default function EventEditScreen() {
       start,
       end: addMinutes(start, DEFAULT_DURATION_MINUTES),
       allDay: false,
-      calendarId: '',
+      calendarId: LOCAL_CALENDAR_ID,
     });
   }, [editing, id, date]);
-
-  // Choose a target calendar as soon as the list is available, but never
-  // overwrite a choice the user has already made.
-  useEffect(() => {
-    if (editing) return;
-
-    setDraft((prev) => {
-      if (!prev || prev.calendarId) return prev;
-
-      // Prefer a calendar that is actually visible — saving into a hidden one
-      // would create the event but leave it invisible in the app, which is
-      // indistinguishable from the save having failed.
-      const candidates = visibleWritable.length > 0 ? visibleWritable : writable;
-      const preferred =
-        candidates.find((c) => c.id === settings.defaultCalendarId) ??
-        candidates.find((c) => c.isPrimary) ??
-        candidates[0];
-
-      return preferred ? { ...prev, calendarId: preferred.id } : prev;
-    });
-  }, [editing, writable, visibleWritable, settings.defaultCalendarId]);
 
   const patch = (changes: Partial<EventDraft>) =>
     setDraft((prev) => (prev ? { ...prev, ...changes } : prev));
@@ -188,12 +169,6 @@ export default function EventEditScreen() {
           <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
             <ActivityIndicator color={t.c.primary} />
           </View>
-        ) : writable.length === 0 ? (
-          <EmptyState
-            icon="lock-closed-outline"
-            title="Nincs írható naptár"
-            message="A telefonodon minden naptár csak olvasható, így nem tudunk új eseményt létrehozni."
-          />
         ) : (
           <ScrollView
             contentContainerStyle={{
@@ -306,11 +281,13 @@ export default function EventEditScreen() {
             </Section>
 
             {/* --------------------------------------------------- calendar -- */}
-            {writable.length > 1 ? (
-              <Section title="Naptár">
-                <Row label="Hova kerüljön?">
+            {editingDeviceEvent && deviceCalendars.length > 1 ? (
+              <Section
+                title="Naptár"
+                footer="Ez az esemény a telefonod naptárában van, ezért a módosítás ott is látszani fog.">
+                <Row label="Melyik naptárban?">
                   <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: t.spacing.sm }}>
-                    {writable.map((calendar) => (
+                    {deviceCalendars.map((calendar) => (
                       <Chip
                         key={calendar.id}
                         label={calendar.title}
@@ -321,6 +298,14 @@ export default function EventEditScreen() {
                     ))}
                   </View>
                 </Row>
+              </Section>
+            ) : !editingDeviceEvent ? (
+              <Section title="Hova kerül">
+                <Row
+                  label="Csak a Napirendben"
+                  hint="Ez az esemény az app saját tárolójában marad – a Samsung és a Google naptár nem látja."
+                  right={<Ionicons name="lock-closed" size={18} color={t.c.primary} />}
+                />
               </Section>
             ) : null}
           </ScrollView>

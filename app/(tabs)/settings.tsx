@@ -69,8 +69,6 @@ export default function SettingsScreen() {
     });
   };
 
-  const writableCalendars = calendars.filter((c) => c.writable);
-
   return (
     <Screen>
       <ScrollView
@@ -207,7 +205,11 @@ export default function SettingsScreen() {
         {/* ----------------------------------------------------- calendars -- */}
         <Section
           title="Naptárak"
-          footer="A kikapcsolt naptárak eseményei nem jelennek meg, és nem is szólnak.">
+          footer={
+            'A kikapcsolt naptárak eseményei nem jelennek meg, és nem is szólnak. ' +
+            'A „Napirend” az app saját naptára: amit itt veszel fel, csak ebben az ' +
+            'appban létezik, más naptáralkalmazás nem látja.'
+          }>
           {calendars.length === 0 ? (
             <Row label="Nincs elérhető naptár" hint="Ellenőrizd a naptár-hozzáférést." />
           ) : (
@@ -237,26 +239,6 @@ export default function SettingsScreen() {
             ))
           )}
         </Section>
-
-        {writableCalendars.length > 1 ? (
-          <Section
-            title="Új események"
-            footer="Ide kerülnek az itt létrehozott programok.">
-            <Row label="Alapértelmezett naptár">
-              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: t.spacing.sm }}>
-                {writableCalendars.map((calendar) => (
-                  <Chip
-                    key={calendar.id}
-                    label={calendar.title}
-                    color={calendar.color}
-                    selected={settings.defaultCalendarId === calendar.id}
-                    onPress={() => update({ defaultCalendarId: calendar.id })}
-                  />
-                ))}
-              </View>
-            </Row>
-          </Section>
-        ) : null}
 
         {/* ---------------------------------------------------- diagnostic -- */}
         <Section

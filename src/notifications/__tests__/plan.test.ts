@@ -8,6 +8,7 @@ const NOW = new Date(2026, 7, 24, 9, 0); // Monday 24 August 2026, 09:00
 function makeEvent(overrides: Partial<CalEvent> = {}): CalEvent {
   return {
     id: 'e1',
+    source: 'device',
     calendarId: 'cal1',
     calendarTitle: 'Munka',
     color: '#4F46E5',

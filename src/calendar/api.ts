@@ -82,6 +82,7 @@ export async function listEvents(
 
       return {
         id: event.id,
+        source: 'device',
         instanceId: event.instanceId,
         calendarId: event.calendarId,
         calendarTitle: source?.title ?? 'Naptár',
@@ -120,6 +121,7 @@ export async function getEvent(id: string): Promise<CalEvent | null> {
 
     return {
       id: event.id,
+      source: 'device',
       instanceId: event.instanceId,
       calendarId: event.calendarId,
       calendarTitle: source?.title ?? 'Naptár',
