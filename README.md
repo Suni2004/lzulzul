@@ -79,6 +79,9 @@ a kiszámolt terv megegyezik azzal, ami már be van állítva, nem nyúlunk hozz
 Az app **natív modulokat használ** (naptár-hozzáférés, ütemezett értesítések),
 ezért Expo Go-ban nem fut – kell egy lefordított APK.
 
+**Weboldal:** <https://suni2004.github.io/lzulzul/> — letöltés, funkciók,
+telepítési útmutató. Minden buildnél magától frissül a `web/` mappából.
+
 ### A legegyszerűbb út: kész APK letöltése
 
 Minden pusholásnál automatikusan lefordul egy telepíthető APK, és felkerül a

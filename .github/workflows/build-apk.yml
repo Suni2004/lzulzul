@@ -22,6 +22,8 @@ on:
 # A release közzétételéhez írási jog kell a repóhoz.
 permissions:
   contents: write
+  pages: write
+  id-token: write
 
 # A futás sorszáma egyben a versionCode és az a szám, amivel a telepített app
 # összeveti magát a közzétett verzióval. Az EXPO_PUBLIC_ előtag miatt az Expo
@@ -39,6 +41,8 @@ jobs:
     name: Release APK
     runs-on: ubuntu-latest
     timeout-minutes: 60
+    outputs:
+      apk_size: ${{ steps.size.outputs.size }}
 
     steps:
       - name: Kód letöltése
@@ -92,6 +96,15 @@ jobs:
       - name: APK elnevezése
         run: cp android/app/build/outputs/apk/release/app-release.apk napirend.apk
 
+      - name: APK méretének kiszámítása
+        id: size
+        run: |
+          bytes=$(stat -c%s napirend.apk)
+          # Magyar tizedesvessző, egy tizedesjeggyel.
+          mb=$(awk -v b="$bytes" 'BEGIN { printf "%.1f", b/1000000 }' | tr '.' ',')
+          echo "size=$mb MB" >> "$GITHUB_OUTPUT"
+          echo "APK: $mb MB ($bytes bájt)"
+
       # Ezt tölti le a telepített app, hogy eldöntse, kell-e frissítenie.
       - name: Verzióleíró készítése
         run: |
@@ -129,3 +142,47 @@ jobs:
           Az app első indításkor naptár- és értesítési engedélyt kér; mindkettő kell a működéséhez.
 
           Készült a \`${GITHUB_SHA:0:7}\` commitból."
+
+  site:
+    name: Weboldal közzététele
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+
+    steps:
+      - name: Kód letöltése
+        uses: actions/checkout@v4
+
+      - name: Verzióadatok behelyettesítése
+        env:
+          APK_SIZE: ${{ needs.build.outputs.apk_size }}
+        run: |
+          months=(január február március április május június július \
+                  augusztus szeptember október november december)
+          today="$(date -u +%Y). ${months[$(( 10#$(date -u +%m) - 1 ))]} $(date -u +%-d)."
+
+          sed -i \
+            -e "s/__VERSION__/1.0.${{ github.run_number }}/g" \
+            -e "s/__SIZE__/${APK_SIZE}/g" \
+            -e "s/__DATE__/${today}/g" \
+            web/index.html
+
+          echo "Behelyettesítve: 1.0.${{ github.run_number }} · ${APK_SIZE} · ${today}"
+          # Egy behelyettesítetlen jelölő is hibás oldalt jelentene.
+          ! grep -q '__[A-Z]*__' web/index.html
+
+      - name: Pages beállítása
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - name: Feltöltés
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: web
+
+      - name: Közzététel
+        id: deploy
+        uses: actions/deploy-pages@v4
