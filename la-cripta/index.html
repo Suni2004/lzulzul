@@ -1,0 +1,460 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>La Cripta</title>
+<meta name="description" content="La Cripta – underground techno és rave klub. A város alatt, hajnalig.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #070707;
+    --bg-2: #0e0d0d;
+    --line: #242222;
+    --bone: #e9e4da;
+    --muted: #8a847b;
+    --red: #e3170a;
+    --red-dim: #5a0a05;
+    --display: "Archivo", "Arial Narrow", sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, monospace;
+    --gutter: clamp(16px, 4vw, 56px);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--bone);
+    font-family: var(--display);
+    font-variation-settings: "wdth" 100;
+    line-height: 1.5;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: inherit; text-decoration: none; }
+  ::selection { background: var(--red); color: var(--bg); }
+
+  /* Film grain over everything */
+  body::after {
+    content: ""; position: fixed; inset: -50%; z-index: 100; pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.5'/%3E%3C/svg%3E");
+    opacity: .09; animation: grain 1s steps(6) infinite;
+  }
+  @keyframes grain {
+    0%,100% { transform: translate(0,0) } 20% { transform: translate(-3%,2%) }
+    40% { transform: translate(2%,-3%) } 60% { transform: translate(-2%,-1%) } 80% { transform: translate(3%,3%) }
+  }
+
+  .mono { font-family: var(--mono); font-size: 12px; letter-spacing: .12em; text-transform: uppercase; }
+  .red { color: var(--red); }
+
+  /* NAV */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+    display: flex; align-items: center; justify-content: space-between; gap: 24px;
+    padding: 18px var(--gutter);
+    mix-blend-mode: difference;
+  }
+  .logo { font-weight: 900; font-variation-settings: "wdth" 62; font-size: 22px; letter-spacing: .02em; }
+  .logo span { color: var(--red); }
+  nav ul { display: flex; gap: 28px; list-style: none; }
+  nav ul a { opacity: .75; transition: opacity .2s; }
+  nav ul a:hover { opacity: 1; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 10px;
+    border: 1px solid var(--bone); padding: 12px 18px;
+    font-family: var(--mono); font-size: 12px; letter-spacing: .14em; text-transform: uppercase;
+    transition: background .2s, color .2s;
+  }
+  .btn:hover { background: var(--bone); color: var(--bg); }
+  .btn.solid { background: var(--red); border-color: var(--red); color: var(--bg); font-weight: 600; }
+  .btn.solid:hover { background: var(--bone); border-color: var(--bone); }
+
+  /* HERO */
+  .hero {
+    position: relative; min-height: 100svh;
+    display: grid; grid-template-rows: 1fr auto; padding: 96px var(--gutter) 32px;
+    overflow: hidden; isolation: isolate;
+  }
+  .hero::before { /* the single red light down the stairwell */
+    content: ""; position: absolute; z-index: -1;
+    width: 90vmax; height: 90vmax; left: 50%; top: 58%;
+    transform: translate(-50%,-50%);
+    background: radial-gradient(circle, rgba(227,23,10,.38) 0%, rgba(227,23,10,.08) 35%, transparent 62%);
+    animation: pulse 0.469s ease-in-out infinite alternate; /* 128 BPM */
+  }
+  @keyframes pulse { from { opacity: .75; transform: translate(-50%,-50%) scale(.97) } to { opacity: 1; transform: translate(-50%,-50%) scale(1.02) } }
+  .arches { position: absolute; inset: 0; width: 100%; height: 100%; z-index: -1; opacity: .22; }
+  .scan {
+    position: absolute; inset: 0; z-index: -1; pointer-events: none;
+    background: repeating-linear-gradient(to bottom, transparent 0 3px, rgba(0,0,0,.35) 3px 4px);
+  }
+  .hero-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; color: var(--muted); }
+  .hero-center { align-self: center; text-align: center; min-width: 0; }
+  .hero > *, .hero-bottom > * { min-width: 0; }
+  .hero h1 {
+    font-weight: 900; line-height: .78; letter-spacing: -.02em;
+    font-variation-settings: "wdth" 62;
+    font-size: clamp(88px, 24vw, 380px);
+    text-transform: uppercase;
+  }
+  .hero h1 .l2 { display: block; color: transparent; -webkit-text-stroke: 1.5px var(--bone); }
+  .hero .tag { margin-top: 28px; color: var(--muted); }
+  .hero-bottom {
+    display: grid; grid-template-columns: 1fr auto; align-items: end; gap: 24px;
+    border-top: 1px solid var(--line); padding-top: 20px;
+  }
+  .next .mono { color: var(--muted); }
+  .next h2 { font-size: clamp(22px, 3vw, 34px); font-weight: 800; font-variation-settings: "wdth" 75; text-transform: uppercase; line-height: 1.1; margin-top: 6px; }
+  .count { display: flex; gap: 18px; font-family: var(--mono); }
+  .count div { text-align: center; }
+  .count b { display: block; font-size: clamp(26px, 3.2vw, 40px); font-weight: 600; line-height: 1; font-variant-numeric: tabular-nums; }
+  .count small { font-size: 10px; letter-spacing: .15em; color: var(--muted); }
+
+  /* TICKER */
+  .ticker { border-block: 1px solid var(--line); overflow: hidden; background: var(--red); color: var(--bg); }
+  .ticker-track { display: flex; width: max-content; animation: tick 28s linear infinite; }
+  .ticker span { padding: 14px 0; font-weight: 900; font-variation-settings: "wdth" 70; font-size: 22px; text-transform: uppercase; white-space: nowrap; }
+  .ticker span::after { content: "✕"; margin: 0 28px; font-size: 14px; vertical-align: middle; }
+  @keyframes tick { to { transform: translateX(-50%) } }
+
+  /* SECTIONS */
+  section { padding: clamp(72px, 10vw, 140px) var(--gutter); }
+  .sec-head { display: flex; justify-content: space-between; align-items: end; gap: 24px; margin-bottom: 48px; flex-wrap: wrap; }
+  .sec-head h2 {
+    font-weight: 900; font-variation-settings: "wdth" 62; text-transform: uppercase;
+    font-size: clamp(48px, 9vw, 128px); line-height: .85;
+  }
+  .sec-head .mono { color: var(--muted); }
+
+  /* EVENTS */
+  .events { list-style: none; border-top: 1px solid var(--line); }
+  .event {
+    display: grid; grid-template-columns: 130px 1fr 1.1fr 140px auto; gap: 24px; align-items: center;
+    padding: 28px 0; border-bottom: 1px solid var(--line); position: relative;
+    transition: padding .25s, background .25s;
+  }
+  .event:hover { background: linear-gradient(90deg, rgba(227,23,10,.12), transparent 70%); padding-left: 16px; }
+  .date b { display: block; font-size: 44px; font-weight: 900; font-variation-settings: "wdth" 62; line-height: 1; }
+  .date .mono { color: var(--muted); }
+  .ev-name { font-size: clamp(22px, 2.4vw, 32px); font-weight: 800; font-variation-settings: "wdth" 80; text-transform: uppercase; line-height: 1.05; }
+  .ev-genre { color: var(--red); margin-top: 6px; }
+  .lineup { color: var(--muted); font-size: 15px; }
+  .lineup strong { color: var(--bone); font-weight: 600; }
+  .time { color: var(--muted); }
+  .badge { display: inline-block; font-family: var(--mono); font-size: 10px; letter-spacing: .15em; padding: 3px 7px; border: 1px solid var(--red); color: var(--red); margin-left: 8px; vertical-align: middle; }
+  .event.sold .btn { opacity: .35; pointer-events: none; }
+
+  /* SPACE */
+  .space { display: grid; grid-template-columns: 1.1fr 1fr; gap: clamp(32px, 6vw, 96px); align-items: center; background: var(--bg-2); border-block: 1px solid var(--line); }
+  .space-visual { position: relative; aspect-ratio: 4/5; border: 1px solid var(--line); overflow: hidden; background: #000; }
+  .space-visual svg { width: 100%; height: 100%; display: block; }
+  .space-visual .mono { position: absolute; left: 16px; bottom: 14px; color: var(--muted); }
+  .space-text h2 { font-weight: 900; font-variation-settings: "wdth" 62; text-transform: uppercase; font-size: clamp(44px, 6.5vw, 96px); line-height: .88; margin-bottom: 28px; }
+  .space-text p { color: #bdb7ad; max-width: 52ch; font-size: 17px; }
+  .space-text p + p { margin-top: 16px; }
+  .specs { margin-top: 40px; display: grid; grid-template-columns: repeat(2, 1fr); border-top: 1px solid var(--line); }
+  .specs div { padding: 18px 0; border-bottom: 1px solid var(--line); }
+  .specs div:nth-child(odd) { padding-right: 16px; }
+  .specs .mono { color: var(--muted); display: block; margin-bottom: 4px; }
+  .specs b { font-size: 22px; font-weight: 800; font-variation-settings: "wdth" 75; text-transform: uppercase; }
+
+  /* RESIDENTS */
+  .residents { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); }
+  .res { background: var(--bg); padding: 28px 22px 24px; min-height: 280px; display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden; }
+  .res .num { font-family: var(--mono); color: var(--muted); font-size: 12px; }
+  .res h3 { font-size: 34px; font-weight: 900; font-variation-settings: "wdth" 62; text-transform: uppercase; line-height: .95; position: relative; }
+  .res p { color: var(--muted); font-size: 14px; margin-top: 8px; position: relative; }
+  .res::before {
+    content: attr(data-glyph); position: absolute; right: -10px; top: -30px;
+    font-size: 220px; font-weight: 900; font-variation-settings: "wdth" 62; line-height: 1;
+    color: transparent; -webkit-text-stroke: 1px #1f1d1d; transition: -webkit-text-stroke-color .3s;
+  }
+  .res:hover::before { -webkit-text-stroke-color: var(--red); }
+
+  /* RULES */
+  .rules { list-style: none; counter-reset: r; display: grid; grid-template-columns: repeat(2, 1fr); gap: 0 clamp(32px, 6vw, 96px); }
+  .rules li { counter-increment: r; display: grid; grid-template-columns: 56px 1fr; gap: 12px; padding: 26px 0; border-top: 1px solid var(--line); }
+  .rules li::before { content: "0" counter(r); font-family: var(--mono); color: var(--red); font-size: 13px; padding-top: 6px; }
+  .rules h3 { font-size: 24px; font-weight: 800; font-variation-settings: "wdth" 80; text-transform: uppercase; line-height: 1.1; }
+  .rules p { color: var(--muted); margin-top: 6px; }
+
+  /* SIGNAL / NEWSLETTER */
+  .signal { text-align: center; border-top: 1px solid var(--line); position: relative; overflow: hidden; }
+  .signal h2 { font-weight: 900; font-variation-settings: "wdth" 62; text-transform: uppercase; font-size: clamp(56px, 12vw, 180px); line-height: .82; }
+  .signal h2 em { font-style: normal; color: var(--red); }
+  .signal p { color: var(--muted); max-width: 46ch; margin: 24px auto 36px; }
+  form { display: flex; max-width: 520px; margin: 0 auto; border: 1px solid var(--bone); }
+  input {
+    flex: 1; min-width: 0; background: transparent; border: 0; color: var(--bone);
+    padding: 16px 18px; font-family: var(--mono); font-size: 14px; outline: none;
+  }
+  input::placeholder { color: var(--muted); }
+  form .btn { border: 0; border-left: 1px solid var(--bone); cursor: pointer; }
+
+  /* FOOTER */
+  footer { padding: 48px var(--gutter) 32px; border-top: 1px solid var(--line); display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 32px; }
+  footer .logo { font-size: 44px; line-height: 1; }
+  footer h4 { font-family: var(--mono); font-size: 11px; letter-spacing: .15em; text-transform: uppercase; color: var(--muted); font-weight: 400; margin-bottom: 12px; }
+  footer ul { list-style: none; display: grid; gap: 6px; }
+  footer a:hover { color: var(--red); }
+  .fine { grid-column: 1 / -1; display: flex; justify-content: space-between; color: var(--muted); padding-top: 24px; border-top: 1px solid var(--line); flex-wrap: wrap; gap: 12px; }
+
+  /* RESPONSIVE */
+  @media (max-width: 1000px) {
+    nav ul { display: none; }
+    .event { grid-template-columns: 90px 1fr auto; gap: 8px 16px; }
+    .event .lineup { grid-column: 2 / -1; grid-row: 2; }
+    .event .time { grid-column: 2 / -1; grid-row: 3; }
+    .event .btn { grid-column: 3; grid-row: 1; }
+    .date b { font-size: 36px; }
+    .space { grid-template-columns: 1fr; }
+    .space-visual { aspect-ratio: 16/10; }
+    .residents { grid-template-columns: repeat(2, 1fr); }
+    footer { grid-template-columns: 1fr 1fr; }
+    footer > div:first-child { grid-column: 1 / -1; }
+  }
+  @media (max-width: 600px) {
+    .hero-bottom { grid-template-columns: 1fr; }
+    .count { gap: 14px; }
+    .rules { grid-template-columns: 1fr; }
+    .residents { grid-template-columns: 1fr; }
+    .res { min-height: 200px; }
+    .event { grid-template-columns: 70px 1fr; }
+    .event .btn { grid-column: 2; grid-row: 4; justify-self: start; }
+    .hero-top span:last-child { display: none; }
+    .fonts .hero h1 { font-size: 36vw; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="#" class="logo">LA CRIPTA<span>.</span></a>
+  <ul class="mono">
+    <li><a href="#program">Program</a></li>
+    <li><a href="#hely">A hely</a></li>
+    <li><a href="#rezidensek">Rezidensek</a></li>
+    <li><a href="#hazirend">Házirend</a></li>
+  </ul>
+  <a href="#program" class="btn">Jegyek →</a>
+</nav>
+
+<header class="hero">
+  <svg class="arches" viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <g fill="none" stroke="#e9e4da" stroke-width="1">
+      <path d="M150 800 V420 A450 450 0 0 1 1050 420 V800"/>
+      <path d="M260 800 V440 A340 340 0 0 1 940 440 V800"/>
+      <path d="M370 800 V460 A230 230 0 0 1 830 460 V800"/>
+      <path d="M470 800 V480 A130 130 0 0 1 730 480 V800"/>
+      <path d="M545 800 V500 A55 55 0 0 1 655 500 V800"/>
+      <line x1="0" y1="800" x2="600" y2="500"/><line x1="1200" y1="800" x2="600" y2="500"/>
+    </g>
+  </svg>
+  <div class="scan"></div>
+
+  <div>
+    <div class="hero-top mono">
+      <span>// −2. szint · a város alatt</span>
+      <span>47.4979° N · 19.0402° E</span>
+    </div>
+  </div>
+
+  <div class="hero-center">
+    <h1>La<span class="l2">Cripta</span></h1>
+    <p class="tag mono">Techno · Industrial · Hard Groove — péntek & szombat, 23:00 → reggel</p>
+  </div>
+
+  <div class="hero-bottom">
+    <div class="next">
+      <span class="mono"><span class="red">●</span> Következő éjszaka · okt. 03. szo</span>
+      <h2>Ossuarium 014 — Rødhåd (6h set)</h2>
+    </div>
+    <div class="count" id="count" aria-label="Visszaszámlálás">
+      <div><b id="cd-d">00</b><small>NAP</small></div>
+      <div><b id="cd-h">00</b><small>ÓRA</small></div>
+      <div><b id="cd-m">00</b><small>PERC</small></div>
+      <div><b id="cd-s" class="red">00</b><small>MP</small></div>
+    </div>
+  </div>
+</header>
+
+<div class="ticker" aria-hidden="true">
+  <div class="ticker-track">
+    <span>No photos on the floor</span><span>Nincs VIP</span><span>Funktion-One · 40 kW</span><span>Hajnal 06:00 után is</span><span>Lent mindenki egyenlő</span><span>Fekete ruha opcionális</span>
+    <span>No photos on the floor</span><span>Nincs VIP</span><span>Funktion-One · 40 kW</span><span>Hajnal 06:00 után is</span><span>Lent mindenki egyenlő</span><span>Fekete ruha opcionális</span>
+  </div>
+</div>
+
+<section id="program">
+  <div class="sec-head">
+    <h2>Program</h2>
+    <span class="mono">Október — November / 2026</span>
+  </div>
+  <ul class="events">
+    <li class="event">
+      <div class="date"><b>03</b><span class="mono">Okt · Szo</span></div>
+      <div><div class="ev-name">Ossuarium 014</div><div class="ev-genre mono">Hypnotic techno</div></div>
+      <div class="lineup"><strong>Rødhåd</strong> (6h set) · Vera Nox · Cripta Residents</div>
+      <div class="time mono">23:00 — 08:00</div>
+      <a href="#" class="btn solid">Jegy</a>
+    </li>
+    <li class="event">
+      <div class="date"><b>10</b><span class="mono">Okt · Szo</span></div>
+      <div><div class="ev-name">Ferro <span class="badge">LIVE</span></div><div class="ev-genre mono">Industrial / EBM</div></div>
+      <div class="lineup"><strong>Paula Temple</strong> · Kontrast (live) · Hollow Saint</div>
+      <div class="time mono">23:00 — 07:00</div>
+      <a href="#" class="btn">Jegy</a>
+    </li>
+    <li class="event sold">
+      <div class="date"><b>17</b><span class="mono">Okt · Szo</span></div>
+      <div><div class="ev-name">Katakomba 12h <span class="badge">TELT HÁZ</span></div><div class="ev-genre mono">Marathon</div></div>
+      <div class="lineup"><strong>Cripta Residents</strong> — zárás előtt nem áll le</div>
+      <div class="time mono">22:00 — 10:00</div>
+      <a href="#" class="btn">Elfogyott</a>
+    </li>
+    <li class="event">
+      <div class="date"><b>24</b><span class="mono">Okt · Pén</span></div>
+      <div><div class="ev-name">Groove Below</div><div class="ev-genre mono">Hard groove / Tribal</div></div>
+      <div class="lineup"><strong>DJ Nobu</strong> · Mira Sol · Bálint K.</div>
+      <div class="time mono">23:00 — 06:00</div>
+      <a href="#" class="btn">Jegy</a>
+    </li>
+    <li class="event">
+      <div class="date"><b>31</b><span class="mono">Okt · Pén</span></div>
+      <div><div class="ev-name">Noche de Muertos</div><div class="ev-genre mono">Halloween · 2 terem</div></div>
+      <div class="lineup"><strong>TBA</strong> · a lineup éjfélkor jelenik meg</div>
+      <div class="time mono">22:00 — 10:00</div>
+      <a href="#" class="btn">Értesíts</a>
+    </li>
+  </ul>
+</section>
+
+<section id="hely" class="space">
+  <div class="space-visual">
+    <svg viewBox="0 0 400 500" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <defs>
+        <radialGradient id="glow" cx="50%" cy="72%" r="55%">
+          <stop offset="0" stop-color="#e3170a" stop-opacity=".75"/>
+          <stop offset=".45" stop-color="#5a0a05" stop-opacity=".35"/>
+          <stop offset="1" stop-color="#000" stop-opacity="0"/>
+        </radialGradient>
+        <linearGradient id="fog" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#e9e4da" stop-opacity=".08"/>
+        </linearGradient>
+      </defs>
+      <rect width="400" height="500" fill="#050505"/>
+      <rect width="400" height="500" fill="url(#glow)"/>
+      <g fill="none" stroke="#e9e4da" stroke-opacity=".35">
+        <path d="M-20 500 V250 A220 220 0 0 1 420 250 V500"/>
+        <path d="M40 500 V270 A160 160 0 0 1 360 270 V500" stroke-opacity=".25"/>
+        <path d="M100 500 V290 A100 100 0 0 1 300 290 V500" stroke-opacity=".18"/>
+        <path d="M150 500 V310 A50 50 0 0 1 250 310 V500" stroke-opacity=".12"/>
+      </g>
+      <!-- light beams -->
+      <g fill="#e3170a" opacity=".16">
+        <polygon points="200,250 60,500 110,500"/><polygon points="200,250 290,500 340,500"/>
+        <polygon points="200,250 185,500 215,500" fill="#e9e4da" opacity=".5"/>
+      </g>
+      <!-- crowd silhouettes -->
+      <g fill="#000">
+        <path d="M0 500 V440 q14-24 28 0 q10-30 24-6 q12-22 26 2 q14-28 30-2 q10-18 22 4 q16-30 32-4 q12-20 24 0 q14-26 30-2 q10-22 26 4 q14-30 30-4 q12-20 24 2 q14-26 28-2 q10-20 22 6 q12-24 24-2 V500 Z"/>
+      </g>
+      <rect width="400" height="500" fill="url(#fog)"/>
+    </svg>
+    <span class="mono">Fő terem · „A Kripta" · 380 fő</span>
+  </div>
+  <div class="space-text">
+    <span class="mono red">// A hely</span>
+    <h2>Húsz lépcső<br>lefelé.</h2>
+    <p>Egy XIX. századi pince boltívei alatt, ahol a fal még hideg, a basszus pedig a mellkasodban szólal meg először. Nincs színpad, nincs VIP-sarok, nincs képernyő – csak a hang, a sötét és a tánc.</p>
+    <p>A DJ a tömeg szintjén áll. Egy vörös fény, köd, és annyi idő, amennyi kell.</p>
+    <div class="specs">
+      <div><span class="mono">Hangrendszer</span><b>Funktion-One</b></div>
+      <div><span class="mono">Kapacitás</span><b>380 + 120 fő</b></div>
+      <div><span class="mono">Mélység</span><b>−9 méter</b></div>
+      <div><span class="mono">Zárás</span><b>Ha kivilágosodik</b></div>
+    </div>
+  </div>
+</section>
+
+<section id="rezidensek">
+  <div class="sec-head">
+    <h2>Rezidensek</h2>
+    <span class="mono">A pince hangja</span>
+  </div>
+  <div class="residents">
+    <article class="res" data-glyph="V"><span class="num">R/01</span><div><h3>Vera Nox</h3><p>Hipnotikus, lassan épülő szettek, 4 óra alatt nem kezd.</p></div></article>
+    <article class="res" data-glyph="H"><span class="num">R/02</span><div><h3>Hollow Saint</h3><p>Industrial, EBM, gépzaj. Hardveren, élőben.</p></div></article>
+    <article class="res" data-glyph="M"><span class="num">R/03</span><div><h3>Mira Sol</h3><p>Hard groove és tribal – a hajnali órák felelőse.</p></div></article>
+    <article class="res" data-glyph="K"><span class="num">R/04</span><div><h3>Kontrast</h3><p>Live act: moduláris szintik, nulla előre felvett sáv.</p></div></article>
+  </div>
+</section>
+
+<section id="hazirend">
+  <div class="sec-head">
+    <h2>Házirend</h2>
+    <span class="mono">Olvasd el, mielőtt lejössz</span>
+  </div>
+  <ol class="rules">
+    <li><div><h3>Nincs fotó a táncparketten</h3><p>A kamerádra matricát ragasztunk a bejáratnál. Ami lent történik, lent marad.</p></div></li>
+    <li><div><h3>Tisztelet mindenkinek</h3><p>Nulla tolerancia a zaklatással, rasszizmussal, homofóbiával szemben. Szólj az Awareness csapatnak – piros karszalag.</p></div></li>
+    <li><div><h3>Az ajtó dönt</h3><p>Nem a ruhád számít, hanem a hozzáállásod. Csoportban érkezni nem előny.</p></div></li>
+    <li><div><h3>Vigyázz magadra</h3><p>Ingyen víz, csendes szoba, füldugó a pultnál. Ha kell, segítünk – kérdés nélkül.</p></div></li>
+  </ol>
+</section>
+
+<section class="signal">
+  <span class="mono red">// Jelzés</span>
+  <h2 style="margin-top:20px">Csak<br><em>befelé</em>.</h2>
+  <p>Iratkozz fel, és 48 órával mindenki más előtt megkapod a lineupot, az early bird jegyeket és a titkos éjszakák helyszínét.</p>
+  <form onsubmit="event.preventDefault(); this.querySelector('button').textContent='Rajta vagy ✓'; this.querySelector('input').value='';">
+    <label for="email" class="mono" style="position:absolute;left:-9999px">E-mail</label>
+    <input id="email" type="email" placeholder="email@cimed.hu" required>
+    <button class="btn solid" type="submit">Feliratkozom</button>
+  </form>
+</section>
+
+<footer>
+  <div>
+    <div class="logo">LA CRIPTA<span>.</span></div>
+    <p class="mono" style="color:var(--muted);margin-top:14px">Underground techno klub · 18+</p>
+  </div>
+  <div>
+    <h4>Hol</h4>
+    <ul><li>Budapest, VII. ker.</li><li>A pontos címet</li><li>jegyvásárlás után küldjük</li></ul>
+  </div>
+  <div>
+    <h4>Nyitva</h4>
+    <ul><li>Péntek 23:00 →</li><li>Szombat 23:00 →</li><li>Vasárnap: afterek</li></ul>
+  </div>
+  <div>
+    <h4>Kövess</h4>
+    <ul><li><a href="#">Instagram</a></li><li><a href="#">SoundCloud</a></li><li><a href="#">Resident Advisor</a></li><li><a href="#">Telegram</a></li></ul>
+  </div>
+  <div class="fine mono"><span>© 2026 La Cripta</span><span>Lent mindenki egyenlő.</span></div>
+</footer>
+
+<script>
+  // The oversized mobile wordmark only fits the condensed face, not the fallback
+  document.fonts && document.fonts.load('900 1em Archivo').then(f => f.length && document.documentElement.classList.add('fonts'));
+
+  // Countdown to the next night: Saturday 23:00 local time
+  (function () {
+    const target = new Date(2026, 9, 3, 23, 0, 0);
+    const pad = n => String(n).padStart(2, "0");
+    const els = ["d", "h", "m", "s"].map(k => document.getElementById("cd-" + k));
+    function tick() {
+      let t = Math.max(0, target - new Date()) / 1000;
+      const v = [Math.floor(t / 86400), Math.floor(t % 86400 / 3600), Math.floor(t % 3600 / 60), Math.floor(t % 60)];
+      els.forEach((el, i) => el.textContent = pad(v[i]));
+    }
+    tick(); setInterval(tick, 1000);
+  })();
+</script>
+</body>
+</html>
