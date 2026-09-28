@@ -180,6 +180,22 @@
   .rules h3 { font-size: 24px; font-weight: 800; font-variation-settings: "wdth" 80; text-transform: uppercase; line-height: 1.1; }
   .rules p { color: var(--muted); margin-top: 6px; }
 
+  /* REVIEWS */
+  .reviews { padding-inline: 0; overflow: hidden; }
+  .reviews .sec-head { padding-inline: var(--gutter); }
+  .rv-row { display: flex; width: max-content; gap: 20px; padding-right: 20px; animation: tick 70s linear infinite; }
+  .rv-row + .rv-row { margin-top: 20px; animation-direction: reverse; animation-duration: 80s; }
+  .rv-row:hover { animation-play-state: paused; }
+  .rv {
+    width: 380px; flex: none; padding: 28px 26px 22px; border: 1px solid var(--line); background: var(--bg-2);
+    display: flex; flex-direction: column; justify-content: space-between; gap: 22px; transition: border-color .25s;
+  }
+  .rv:hover { border-color: var(--red); }
+  .rv blockquote { font-size: 18px; line-height: 1.45; color: #d6d0c5; }
+  .rv blockquote::before { content: "“"; display: block; font-size: 64px; font-weight: 900; line-height: .6; color: var(--red); margin-bottom: 10px; }
+  .rv footer { all: unset; display: flex; justify-content: space-between; gap: 12px; font-family: var(--mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); border-top: 1px solid var(--line); padding-top: 14px; }
+  .rv footer b { color: var(--bone); font-weight: 600; }
+
   /* SIGNAL / NEWSLETTER */
   .signal { text-align: center; border-top: 1px solid var(--line); position: relative; overflow: hidden; }
   .signal h2 { font-weight: 900; font-variation-settings: "wdth" 62; text-transform: uppercase; font-size: clamp(56px, 12vw, 180px); line-height: .82; }
@@ -228,7 +244,10 @@
   }
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation: none !important; transition: none !important; }
+    .rv-row { width: auto; overflow-x: auto; padding-inline: var(--gutter); }
+    .rv-row [aria-hidden] { display: none; }
   }
+  @media (max-width: 600px) { .rv { width: 300px; } .rv blockquote { font-size: 16px; } }
 </style>
 </head>
 <body>
@@ -239,6 +258,7 @@
     <li><a href="#program">Program</a></li>
     <li><a href="#hely">A hely</a></li>
     <li><a href="#rezidensek">Rezidensek</a></li>
+    <li><a href="#velemenyek">Vélemények</a></li>
     <li><a href="#hazirend">Házirend</a></li>
   </ul>
   <a href="#program" class="btn">Jegyek →</a>
@@ -395,6 +415,17 @@
   </div>
 </section>
 
+<!-- MINTA-VÉLEMÉNYEK: kitalált helykitöltő szövegek a látványtervhez.
+     Élesítés előtt valódi vendégvéleményekre kell cserélni. -->
+<section id="velemenyek" class="reviews">
+  <div class="sec-head">
+    <h2>Vélemények</h2>
+    <span class="mono">Akik már lent voltak</span>
+  </div>
+  <div class="rv-row"></div>
+  <div class="rv-row"></div>
+</section>
+
 <section id="hazirend">
   <div class="sec-head">
     <h2>Házirend</h2>
@@ -442,6 +473,41 @@
 <script>
   // The oversized mobile wordmark only fits the condensed face, not the fallback
   document.fonts && document.fonts.load('900 1em Archivo').then(f => f.length && document.documentElement.classList.add('fonts'));
+
+  // Placeholder reviews, shuffled on every load and split into two drifting rows
+  (function () {
+    const reviews = [
+      ["Hajnali ötkor Lucas olyat rakott le, hogy a fél terem felüvöltött. Fél kilenckor jöttem fel a lépcsőn, és nem tudtam, hol vagyok.", "Dóra, 27", "Groove Below"],
+      ["Végre egy hely, ahol senki nem a telefonját nézi. A matrica a kamerán elsőre furcsa, aztán rájössz, hogy ez a lényeg.", "Bence", "Ossuarium"],
+      ["A hangrendszer ebben a pincében brutális. Tiszta, hangos, és másnap mégsem csengett a fülem.", "Márk", "Ferro"],
+      ["Egyedül jöttem, és egy percig sem éreztem magam egyedül.", "Lili, 31", "Ossuarium"],
+      ["Klaus élő szettje moduláris szintikkel… Nem tudom, hogy csinálta, de két órán át meg sem álltam.", "Tamás", "Ferro"],
+      ["Az Awareness csapat tényleg ott van, és tényleg figyel. Ezért jövök vissza.", "Nóra", "Katakomba"],
+      ["Anthony négy óra alatt ért fel a csúcsra, és mindenki vele ment. Türelem és hipnózis.", "Gergő", "Ossuarium"],
+      ["Nincs VIP, nincs pózolás. Csak sötét, vörös fény és pár száz ember, akik ugyanarra mozognak.", "Zsófi", "Groove Below"],
+      ["James hardveres szettje olyan volt, mintha egy gyár tanult volna meg táncolni.", "Ádám", "Ferro"],
+      ["Az ajtónál nem a cipőmet nézték, hanem hogy mosolygok-e. Jó érzés volt lemenni.", "Réka", "Katakomba"],
+    ];
+    for (let i = reviews.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [reviews[i], reviews[j]] = [reviews[j], reviews[i]];
+    }
+    const card = ([text, who, night]) => {
+      const el = document.createElement("article");
+      el.className = "rv";
+      el.innerHTML = "<blockquote></blockquote><footer><b></b><span></span></footer>";
+      el.querySelector("blockquote").textContent = text;
+      el.querySelector("b").textContent = who;
+      el.querySelector("span").textContent = night;
+      return el;
+    };
+    document.querySelectorAll(".rv-row").forEach((row, r) => {
+      const half = reviews.slice(r * 5, r * 5 + 5);
+      half.forEach(rv => row.append(card(rv)));
+      // Second copy makes the loop seamless; hidden from screen readers
+      half.forEach(rv => { const c = card(rv); c.setAttribute("aria-hidden", "true"); row.append(c); });
+    });
+  })();
 
   // Countdown to the next night: Saturday 23:00 local time
   (function () {
