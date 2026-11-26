@@ -219,6 +219,50 @@
     requestAnimationFrame(frame);
   }
 
+  // Szív körül keringő "SZERETLEK" gyűrűk (3D, takarással)
+  const RINGS = [
+    { text: 'SZERETLEK ♥ ', r: 1.62, tilt: 0.38, roll: -0.12, speed: 0.55, size: 1.9, bold: 800 },
+    { text: '<3 szeretlek ', r: 1.95, tilt: -0.55, roll: 0.22, speed: -0.38, size: 1.35, bold: 400 },
+  ];
+  function drawRings(t, cx, cy, fade, front) {
+    if (fade <= 0) return;
+    ctx.save();
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    for (const ring of RINGS) {
+      const Rpx = Math.min(ring.r * S, W * 0.47);
+      const base = fs * ring.size;
+      const L0 = ring.text.length;
+      const n = L0 * Math.max(1, Math.round((2 * Math.PI * Rpx) / (base * 0.95) / L0));
+      const cT = Math.cos(ring.tilt), sT = Math.sin(ring.tilt);
+      const cR = Math.cos(ring.roll), sR = Math.sin(ring.roll);
+      const rot = t * ring.speed;
+      for (let i = 0; i < n; i++) {
+        const ch0 = ring.text[i % ring.text.length];
+        if (ch0 === ' ') continue;
+        const th = rot - (i / n) * Math.PI * 2; // így elölről balról jobbra olvasható
+        // kör a vízszintes síkban, majd döntés (x tengely) és billentés (z tengely)
+        let x = Math.cos(th), y = 0, z = Math.sin(th);
+        const y1 = y * cT - z * sT, z1 = y * sT + z * cT;
+        const x2 = x * cR - y1 * sR, y2 = x * sR + y1 * cR;
+        if ((z1 >= 0) !== front) continue;
+        const depth = (z1 + 1) / 2;               // 0 = hátul, 1 = elöl
+        const persp = 0.72 + 0.45 * depth;
+        const px = cx + x2 * Rpx * persp / (0.72 + 0.45 * 0.5);
+        const py = cy - y2 * Rpx * 0.55 - S * 0.05;
+        const size = Math.round(base * persp);
+        ctx.font = `${ring.bold} ${size}px "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace`;
+        ctx.globalAlpha = fade * (0.18 + 0.82 * depth * depth);
+        ctx.fillStyle = depth > 0.75 ? '#fff0f5' : depth > 0.45 ? '#ff8fb4' : '#c2185b';
+        ctx.shadowColor = '#ff2d6f';
+        ctx.shadowBlur = front ? 10 * depth : 0;
+        ctx.fillText(ch0, px, py);
+      }
+    }
+    ctx.restore();
+    ctx.font = `800 ${fs}px "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace`;
+  }
+
   function drawHeart(t, dt) {
     const intro = Math.min(1, t / 1.4);
     // rugalmas felnövés
@@ -305,6 +349,10 @@
     }
     ctx.globalAlpha = 1;
 
+    // hátsó gyűrű-betűk: a szív mögött
+    const ringFade = Math.max(0, Math.min(1, (t - 0.5) / 1.2));
+    drawRings(t, cx, cy, ringFade, false);
+
     // maga a szív
     for (let l = 0; l < LEVELS; l++) {
       const b = buckets[l]; if (!b.length) continue;
@@ -315,6 +363,9 @@
         ctx.fillText(glyph, b[i] * cw, b[i + 1] * ch + ch * 0.8);
       }
     }
+
+    // elülső gyűrű-betűk: a szív előtt
+    drawRings(t, cx, cy, ringFade, true);
 
     // részecskék
     for (const p of parts) {
